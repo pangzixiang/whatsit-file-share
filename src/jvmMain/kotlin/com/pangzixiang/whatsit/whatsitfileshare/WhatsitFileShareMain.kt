@@ -1,45 +1,30 @@
 package com.pangzixiang.whatsit.whatsitfileshare
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.window.WindowDraggableArea
-import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.runtime.*
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.window.*
-import com.pangzixiang.whatsit.whatsitfileshare.ui.app
-import com.pangzixiang.whatsit.whatsitfileshare.ui.component.openQRCodeDialogButton
+import com.pangzixiang.whatsit.whatsitfileshare.ui.common.ApplicationState
+import com.pangzixiang.whatsit.whatsitfileshare.ui.mainUI
 import com.pangzixiang.whatsit.whatsitfileshare.vertx.VertxApplication
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 val configLoader: Config = ConfigFactory.load()
 
-fun main() = application {
-    var isOpen by remember { mutableStateOf(true) }
-//    var expanded by remember { mutableStateOf(false) }
-    val windowState = rememberWindowState(
-        width = Dp(configLoader.getInt("application.width").toFloat()),
-        height = Dp(configLoader.getInt("application.height").toFloat()),
-        position = WindowPosition(Alignment.Center),
-    )
+val logger: Logger = LoggerFactory.getLogger("Main-UI")
 
-    if (isOpen) {
-        val trayState = rememberTrayState()
-        VertxApplication.start()
+fun main() = application {
+    val applicationState = remember {
+        ApplicationState()
+    }
+    val trayState = rememberTrayState()
+
+    if (applicationState.isMainWindowOpen) {
+        LaunchedEffect(Unit) {
+            VertxApplication.start(applicationState)
+        }
         Tray(
             state = trayState,
             icon = painterResource("assets/icon.png"),
@@ -48,83 +33,14 @@ fun main() = application {
                 Item(
                     "Exit",
                     onClick = {
-                        isOpen = false
+                        applicationState.toggleWindowOpen()
                     }
                 )
             }
         )
-
-        Window(
-//            onCloseRequest = ::exitApplication,
-            onCloseRequest = { isOpen = false },
-            title = configLoader.getString("application.name"),
-            state = windowState,
-            icon = painterResource("assets/icon.png"),
-            undecorated = true,
-            resizable = false,
-            transparent = true,
-        ) {
-            Surface(
-                color = MaterialTheme.colors.surface,
-            ) {
-                Column {
-                    WindowDraggableArea {
-                        TopAppBar(
-                            title = {
-//                                DropdownMenu(
-//                                    expanded = expanded,
-//                                    onDismissRequest = { expanded = false }
-//                                ) {
-//                                    DropdownMenuItem(onClick = { /* Handle refresh! */ }) {
-//                                        Text("Refresh")
-//                                    }
-//                                    DropdownMenuItem(onClick = { /* Handle settings! */ }) {
-//                                        Text("Settings")
-//                                    }
-//                                    Divider()
-//                                    DropdownMenuItem(onClick = { /* Handle send feedback! */ }) {
-//                                        Text("Send Feedback")
-//                                    }
-//                                }
-                                Text(text = "Whatsit FileShare")
-//                                IconButton(onClick = { expanded = true }) {
-//                                    Icon(Icons.Default.MoreVert, contentDescription = "Localized description")
-//                                }
-                            },
-                            navigationIcon = {
-                                openQRCodeDialogButton()
-                            },
-                            actions = {
-                                IconButton(
-                                    onClick = { windowState.isMinimized = true },
-                                ) {
-                                    Icon(Icons.Filled.CloseFullscreen, contentDescription = "Minimize")
-                                }
-                                if (windowState.placement == WindowPlacement.Maximized) {
-                                    IconButton(
-                                        onClick = { windowState.placement = WindowPlacement.Floating },
-                                    ) {
-                                        Icon(Icons.Filled.FullscreenExit, contentDescription = "CloseMaximize")
-                                    }
-                                } else {
-                                    IconButton(
-                                        onClick = { windowState.placement = WindowPlacement.Maximized },
-                                    ) {
-                                        Icon(Icons.Filled.Fullscreen, contentDescription = "Maximize")
-                                    }
-                                }
-                                IconButton(
-                                    onClick = { isOpen = false },
-                                ) {
-                                    Icon(Icons.Filled.Close, contentDescription = "Close")
-                                }
-                            }
-                        )
-                    }
-                    app()
-                }
-            }
-        }
+        mainUI(applicationState)
+    } else {
+        logger.info("Window is closed, starting to shutdown...")
     }
 
 }

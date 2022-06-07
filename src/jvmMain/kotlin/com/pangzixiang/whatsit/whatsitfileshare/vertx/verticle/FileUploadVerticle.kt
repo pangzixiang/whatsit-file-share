@@ -1,6 +1,6 @@
 package com.pangzixiang.whatsit.whatsitfileshare.vertx.verticle
 
-import com.pangzixiang.whatsit.whatsitfileshare.utils.Utils
+import com.pangzixiang.whatsit.whatsitfileshare.ui.common.ApplicationState
 import com.pangzixiang.whatsit.whatsitfileshare.vertx.BaseVerticle
 import io.vertx.core.Promise
 import io.vertx.core.json.JsonObject
@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory
 import java.io.*
 import java.util.*
 
-class FileUploadVerticle: BaseVerticle() {
+class FileUploadVerticle(applicationState: ApplicationState) : BaseVerticle(applicationState) {
     private val logger: Logger = LoggerFactory.getLogger(FileUploadVerticle::class.java)
 
     override fun start(startPromise: Promise<Void>) {
@@ -45,6 +45,7 @@ class FileUploadVerticle: BaseVerticle() {
                         }
                     } while (true)
                     bufferOutputStream.close()
+                    applicationState.addOutputFileList(File("./outputFile/${fileName}"))
 //                    Utils.deleteDir(File(filePath))
                 }
             }

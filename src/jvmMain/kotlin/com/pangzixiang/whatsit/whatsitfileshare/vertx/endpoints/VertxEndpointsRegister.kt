@@ -1,6 +1,7 @@
 package com.pangzixiang.whatsit.whatsitfileshare.vertx.endpoints
 
 import com.pangzixiang.whatsit.whatsitfileshare.configLoader
+import com.pangzixiang.whatsit.whatsitfileshare.ui.common.ApplicationState
 import com.pangzixiang.whatsit.whatsitfileshare.vertx.BaseVerticle
 import com.pangzixiang.whatsit.whatsitfileshare.vertx.annotation.Endpoint
 import io.vertx.core.Handler
@@ -16,7 +17,7 @@ import org.slf4j.LoggerFactory
 import java.lang.reflect.Method
 import kotlin.reflect.KClass
 
-class VertxEndpointsRegister: BaseVerticle() {
+class VertxEndpointsRegister(applicationState: ApplicationState) : BaseVerticle(applicationState) {
     private val logger: Logger = LoggerFactory.getLogger(VertxEndpointsRegister::class.java)
 
     override fun start(startPromise: Promise<Void>) {
@@ -36,15 +37,15 @@ class VertxEndpointsRegister: BaseVerticle() {
                         .route(HttpMethod.valueOf(endpoint.method.name), endpoint.path)
                         .handler { req ->
                             method
-                                .invoke(kClass.java.getDeclaredConstructor(Vertx::class.java)
-                                    .newInstance(vertx), req)
+                                .invoke(kClass.java.getDeclaredConstructor(Vertx::class.java, ApplicationState::class.java)
+                                    .newInstance(vertx, applicationState), req)
                         }
                 } else {
                     router
                         .route(HttpMethod.valueOf(endpoint.method.name), endpoint.path)
                         .handler(
-                            method.invoke(kClass.java.getDeclaredConstructor(Vertx::class.java).newInstance(vertx))
-                                    as Handler<RoutingContext>?
+                            method.invoke(kClass.java.getDeclaredConstructor(Vertx::class.java, ApplicationState::class.java).newInstance(vertx, applicationState))
+                                    as Handler<RoutingContext>
                         )
                 }
                 logger.info("endpoint '${endpoint.path}' with method '${endpoint.method.name}' registered [return type: ${method.returnType.typeName}]")
@@ -59,7 +60,7 @@ class VertxEndpointsRegister: BaseVerticle() {
                     startPromise.complete()
                     logger.info("HTTP server started on port '${configLoader.getInt("server.port")}'")
                 } else {
-                    startPromise.fail(http.cause());
+                    startPromise.fail(http.cause())
                 }
             }
     }

@@ -1,5 +1,6 @@
 package com.pangzixiang.whatsit.whatsitfileshare.vertx
 
+import com.pangzixiang.whatsit.whatsitfileshare.ui.common.ApplicationState
 import com.pangzixiang.whatsit.whatsitfileshare.vertx.dto.ControllerRequest
 import com.pangzixiang.whatsit.whatsitfileshare.vertx.dto.ControllerRequestCodec
 import io.vertx.core.AbstractVerticle
@@ -7,11 +8,10 @@ import io.vertx.core.AsyncResult
 import io.vertx.core.Handler
 import io.vertx.core.eventbus.EventBus
 import io.vertx.core.eventbus.Message
-import io.vertx.core.eventbus.MessageConsumer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-open class BaseVerticle: AbstractVerticle() {
+open class BaseVerticle(var applicationState: ApplicationState): AbstractVerticle() {
 
     private val logger: Logger = LoggerFactory.getLogger(BaseVerticle::class.java)
 

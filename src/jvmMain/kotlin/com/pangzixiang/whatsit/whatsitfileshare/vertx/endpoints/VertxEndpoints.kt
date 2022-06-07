@@ -1,5 +1,6 @@
 package com.pangzixiang.whatsit.whatsitfileshare.vertx.endpoints
 
+import com.pangzixiang.whatsit.whatsitfileshare.ui.common.ApplicationState
 import com.pangzixiang.whatsit.whatsitfileshare.vertx.BaseVerticle
 import com.pangzixiang.whatsit.whatsitfileshare.vertx.annotation.Endpoint
 import com.pangzixiang.whatsit.whatsitfileshare.vertx.constant.ContentType
@@ -14,7 +15,7 @@ import java.io.*
 import java.net.URLDecoder
 
 
-class VertxEndpoints(vertx: Vertx): BaseVerticle() {
+class VertxEndpoints(vertx: Vertx, applicationState: ApplicationState): BaseVerticle(applicationState) {
 
     init {
         this.vertx = vertx
