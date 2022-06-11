@@ -7,7 +7,7 @@ import java.awt.FileDialog
 import java.io.File
 import java.nio.file.Path
 
-@Deprecated(message = "changed to use JFileDialog")
+//@Deprecated(message = "changed to use JFileDialog")
 @Composable
 fun FrameWindowScope.FileDialog(
     title: String,

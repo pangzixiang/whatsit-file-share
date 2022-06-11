@@ -14,9 +14,13 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.window.*
 import com.pangzixiang.whatsit.whatsitfileshare.configLoader
+import com.pangzixiang.whatsit.whatsitfileshare.logger
 import com.pangzixiang.whatsit.whatsitfileshare.ui.common.ApplicationState
+import com.pangzixiang.whatsit.whatsitfileshare.ui.component.FileDialog
 import com.pangzixiang.whatsit.whatsitfileshare.ui.component.app
 import com.pangzixiang.whatsit.whatsitfileshare.ui.component.openQRCodeDialogButton
+import com.pangzixiang.whatsit.whatsitfileshare.utils.CacheUtils
+import java.io.File
 
 @Composable
 fun mainUI(applicationState: ApplicationState) {
@@ -39,6 +43,17 @@ fun mainUI(applicationState: ApplicationState) {
             Surface(
                 color = MaterialTheme.colors.surface,
             ) {
+                if (applicationState.isFileDialogOpen) {
+                    FileDialog(title = "Select File", isLoad = true) {
+                        if (it != null) {
+                            val file = File(it.toUri())
+                            logger.info("Selected File [${file.path}]")
+                            applicationState.addDownloadFileList(file)
+                            CacheUtils.put("downloadFileList", applicationState.downloadFileList)
+                        }
+                        applicationState.toggleFileDialogOpen()
+                    }
+                }
                 Column {
                     WindowDraggableArea {
                         TopAppBar(
@@ -94,14 +109,6 @@ fun mainUI(applicationState: ApplicationState) {
                         )
                     }
                     app(applicationState)
-//                    if (applicationState.isFileDialogOpen) {
-//                        FileDialog("select file", true) {
-//                            if (it != null) {
-//                                logger.info(it.fileName.name)
-//                            }
-//                            applicationState.toggleFileDialogOpen()
-//                        }
-//                    }
                 }
             }
         }

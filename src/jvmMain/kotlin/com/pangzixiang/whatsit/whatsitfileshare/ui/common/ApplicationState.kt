@@ -13,6 +13,12 @@ class ApplicationState {
     var outputFileList = mutableStateListOf<File>()
     private set
 
+    var isFileDialogOpen by mutableStateOf(false)
+    private set
+
+    var downloadFileList = mutableStateListOf<File>()
+    private set
+
     fun toggleWindowOpen() {
         isMainWindowOpen = !isMainWindowOpen
     }
@@ -29,6 +35,15 @@ class ApplicationState {
     fun addOutputFileList(file: File) {
         outputFileList.add(file)
         outputFileList = outputFileList.toSet().toMutableStateList()
+    }
+
+    fun addDownloadFileList(file: File) {
+        downloadFileList.add(file)
+        downloadFileList = downloadFileList.toSet().toMutableStateList()
+    }
+
+    fun toggleFileDialogOpen() {
+        isFileDialogOpen = !isFileDialogOpen
     }
 
 }

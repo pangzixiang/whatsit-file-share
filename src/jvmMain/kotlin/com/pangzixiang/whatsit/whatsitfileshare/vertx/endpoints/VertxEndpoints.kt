@@ -1,6 +1,8 @@
 package com.pangzixiang.whatsit.whatsitfileshare.vertx.endpoints
 
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import com.pangzixiang.whatsit.whatsitfileshare.ui.common.ApplicationState
+import com.pangzixiang.whatsit.whatsitfileshare.utils.CacheUtils
 import com.pangzixiang.whatsit.whatsitfileshare.vertx.BaseVerticle
 import com.pangzixiang.whatsit.whatsitfileshare.vertx.annotation.Endpoint
 import com.pangzixiang.whatsit.whatsitfileshare.vertx.constant.ContentType
@@ -27,7 +29,7 @@ class VertxEndpoints(vertx: Vertx, applicationState: ApplicationState): BaseVert
     private fun health(req: RoutingContext) {
         req.response()
             .putHeader(ContentType.TYPE.value, ContentType.TEXT.value)
-            .end("OK!")
+            .end(CacheUtils.get("health").toString())
     }
 
 //    @Endpoint(path = "/", method = HttpMethods.GET)
@@ -70,5 +72,47 @@ class VertxEndpoints(vertx: Vertx, applicationState: ApplicationState): BaseVert
             req.response().putHeader(ContentType.TYPE.value, ContentType.JSON.value).end(JsonObject().put("status", 200).encode())
         }
 
+    }
+
+    @Endpoint(path = "/download/:fileName", method = HttpMethods.GET)
+    private fun download(request: RoutingContext) {
+        val fileName = URLDecoder.decode(request.pathParam("fileName"), "utf-8")
+        logger.info(fileName)
+        val tempList = CacheUtils.get("downloadFileList")
+        if (tempList != null) {
+            val list = tempList as SnapshotStateList<*>
+            list.forEach {
+                val file = it as File
+                if (file.name.equals(fileName)) {
+                    request
+                        .response()
+                        .putHeader("Content-Disposition", "attachment;filename=${file.name}")
+                        .sendFile(file.path)
+                    return
+                }
+            }
+        }
+        request.response().setStatusCode(404).end("NOT FOUND")
+    }
+
+    @Endpoint(path = "/getDownloadList", method = HttpMethods.GET)
+    private fun getDownload(request: RoutingContext) {
+        val response = JsonObject()
+        val tempList = CacheUtils.get("downloadFileList")
+        val fileList = ArrayList<JsonObject>()
+        if (tempList != null) {
+            val list = tempList as SnapshotStateList<*>
+            list.forEach {
+                val file = it as File
+                val temp = JsonObject()
+                temp.put("name", file.name)
+                temp.put("size", file.length())
+                temp.put("lastModified", file.lastModified())
+                fileList.add(temp)
+            }
+
+        }
+        response.put("data", fileList)
+        request.response().putHeader(ContentType.TYPE.value, ContentType.JSON.value).end(response.encode())
     }
 }

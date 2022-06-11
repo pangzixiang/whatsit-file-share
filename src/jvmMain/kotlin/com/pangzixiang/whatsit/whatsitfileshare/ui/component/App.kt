@@ -8,17 +8,19 @@ import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.UploadFile
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.pangzixiang.whatsit.whatsitfileshare.ui.common.ApplicationState
+import com.pangzixiang.whatsit.whatsitfileshare.ui.page.download
 import com.pangzixiang.whatsit.whatsitfileshare.ui.page.home
 import com.pangzixiang.whatsit.whatsitfileshare.ui.page.settings
-import java.util.*
+import kotlin.collections.LinkedHashMap
 
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -27,8 +29,9 @@ import java.util.*
 fun app(applicationState: ApplicationState) {
     var selectedItem by remember { mutableStateOf(0) }
     val stateVertical = rememberScrollState(0)
-    val menus = TreeMap<String, ImageVector>()
-    menus["home"] = Icons.Filled.Home
+    val menus = LinkedHashMap<String, ImageVector>()
+    menus["home"] = Icons.Filled.UploadFile
+    menus["download"] = Icons.Filled.Download
     menus["settings"] = Icons.Filled.Settings
     MaterialTheme {
         Box(modifier = Modifier.fillMaxSize()) {
@@ -48,7 +51,8 @@ fun app(applicationState: ApplicationState) {
                         Column(verticalArrangement = Arrangement.spacedBy(5.dp), modifier = Modifier.padding(PaddingValues(5.dp))) {
                             when(selectedItem) {
                                 0 -> home(applicationState)
-                                1 -> settings(applicationState)
+                                1 -> download(applicationState)
+                                2 -> settings(applicationState)
                                 else -> home(applicationState)
                             }
                         }

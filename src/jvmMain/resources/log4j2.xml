@@ -7,7 +7,7 @@
     <RollingFile name="File" fileName="logs/app.log"
                  filePattern="logs/$${date:yyyy-MM}/app-%d{MM-dd-yyyy}-%i.log">
       <PatternLayout>
-        <Pattern>%d [%t] %p %c{1.} - %m%n</Pattern>
+        <Pattern>%d{yyyy-MM-dd HH:mm:ss} [%t] %p %c{1.} - %m%n</Pattern>
       </PatternLayout>
       <Policies>
         <TimeBasedTriggeringPolicy />

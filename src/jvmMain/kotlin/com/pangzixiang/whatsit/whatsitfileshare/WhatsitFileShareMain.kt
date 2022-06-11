@@ -5,6 +5,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.window.*
 import com.pangzixiang.whatsit.whatsitfileshare.ui.common.ApplicationState
 import com.pangzixiang.whatsit.whatsitfileshare.ui.mainUI
+import com.pangzixiang.whatsit.whatsitfileshare.utils.CacheUtils
 import com.pangzixiang.whatsit.whatsitfileshare.vertx.VertxApplication
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
@@ -37,6 +38,7 @@ fun main() = application {
         )
 
         LaunchedEffect(Unit) {
+            CacheUtils.put("health", true)
             VertxApplication.start(applicationState)
         }
 

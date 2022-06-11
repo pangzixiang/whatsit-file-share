@@ -1,13 +1,22 @@
 package com.pangzixiang.whatsit.whatsitfileshare.ui.page
 
 import androidx.compose.desktop.ui.tooling.preview.Preview
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AttachFile
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import com.pangzixiang.whatsit.whatsitfileshare.configLoader
 import com.pangzixiang.whatsit.whatsitfileshare.logger
 import com.pangzixiang.whatsit.whatsitfileshare.ui.common.ApplicationState
+import com.pangzixiang.whatsit.whatsitfileshare.utils.QRUtils
+import com.pangzixiang.whatsit.whatsitfileshare.utils.Utils
 import java.io.File
+import java.net.URI
 import java.util.Date
 import javax.swing.JFileChooser
 
@@ -16,9 +25,7 @@ import javax.swing.JFileChooser
 @Preview
 fun home(applicationState: ApplicationState) {
     val fileList = applicationState.outputFileList
-    if (fileList.size == 0) {
-        Text("Nothing!")
-    } else {
+    if (fileList.size != 0) {
         fileList.forEach {
             ListItem(
                 text = { Text(it.name) },
@@ -37,12 +44,22 @@ fun home(applicationState: ApplicationState) {
             )
             Divider()
         }
+        Button(onClick = {
+            refreshList(applicationState)
+        }) {
+            Text("Refresh")
+        }
+    } else {
+        Box(contentAlignment = Alignment.Center) {
+            val localIP = URI.create("http://${Utils.getLocalIpAddress()}:${configLoader.getString("server.port")}").toString()
+            Image(
+                QRUtils.generateQR(localIP),
+                contentDescription = "QR Code",
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
     }
-    Button(onClick = {
-        refreshList(applicationState)
-    }) {
-        Text("Refresh")
-    }
+
 }
 
 fun saveFileToPath(applicationState: ApplicationState, file: File) {

@@ -45,6 +45,11 @@ dependencies {
 
     //compose
     commonMainImplementation("org.jetbrains.compose.material:material-icons-extended-desktop:1.1.0")
+
+    // Cache
+    commonMainImplementation("com.github.ben-manes.caffeine:caffeine:3.1.1")
+//    commonMainImplementation("com.github.ben-manes.caffeine:guava:3.1.1")
+//    commonMainImplementation("com.github.ben-manes.caffeine:jcache:3.1.1")
 }
 
 kotlin {
@@ -67,7 +72,7 @@ kotlin {
 compose.desktop {
     application {
         mainClass = "$group.${rootProject.name.replace("-", "")}.WhatsitFileShareMainKt"
-        jvmArgs += listOf("-Xmx2G")
+        jvmArgs += listOf("-Xmx2G", "-XX:+UseZGC", "-Xlog:gc:stdout:time")
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "whatsit-file-share"
