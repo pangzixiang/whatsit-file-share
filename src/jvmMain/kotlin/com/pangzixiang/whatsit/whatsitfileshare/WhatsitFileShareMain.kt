@@ -22,9 +22,6 @@ fun main() = application {
     val trayState = rememberTrayState()
 
     if (applicationState.isMainWindowOpen) {
-        LaunchedEffect(Unit) {
-            VertxApplication.start(applicationState)
-        }
         Tray(
             state = trayState,
             icon = painterResource("assets/icon.png"),
@@ -38,6 +35,11 @@ fun main() = application {
                 )
             }
         )
+
+        LaunchedEffect(Unit) {
+            VertxApplication.start(applicationState)
+        }
+
         mainUI(applicationState)
     } else {
         logger.info("Window is closed, starting to shutdown...")

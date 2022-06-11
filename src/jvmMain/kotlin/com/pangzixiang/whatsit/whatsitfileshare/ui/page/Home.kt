@@ -1,20 +1,17 @@
 package com.pangzixiang.whatsit.whatsitfileshare.ui.page
 
 import androidx.compose.desktop.ui.tooling.preview.Preview
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AttachFile
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
 import com.pangzixiang.whatsit.whatsitfileshare.logger
 import com.pangzixiang.whatsit.whatsitfileshare.ui.common.ApplicationState
-import com.pangzixiang.whatsit.whatsitfileshare.utils.Utils
 import java.io.File
+import java.util.Date
 import javax.swing.JFileChooser
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 @Preview
 fun home(applicationState: ApplicationState) {
@@ -22,29 +19,29 @@ fun home(applicationState: ApplicationState) {
     if (fileList.size == 0) {
         Text("Nothing!")
     } else {
-            fileList.forEach {
-                Card(
-                    backgroundColor = Color.DarkGray,
-                    contentColor = Color.White,
-                    elevation = 1.dp,
-                    modifier = Modifier.fillMaxWidth().height(80.dp),
-                ) {
-                    Column {
-                        Text(it.name)
-                        Button(onClick = {
-                            saveFileToPath(applicationState, it)
-                        }) {
-                            Text("save")
-                        }
+        fileList.forEach {
+            ListItem(
+                text = { Text(it.name) },
+                icon = {
+                    Icon(Icons.Filled.AttachFile, contentDescription = it.name)
+                },
+                secondaryText = { Text("${(it.length() / 1024 / 1024)} MB") },
+                overlineText = { Text("${Date(it.lastModified())}") },
+                trailing = {
+                    Button(onClick = {
+                        saveFileToPath(applicationState, it)
+                    }) {
+                        Text("save")
                     }
                 }
-            }
+            )
+            Divider()
+        }
     }
     Button(onClick = {
-        applicationState.outputFileList.clear()
-        Utils.deleteDir(File("./outputFile"))
+        refreshList(applicationState)
     }) {
-        Text("houseKeep")
+        Text("Refresh")
     }
 }
 
@@ -62,6 +59,14 @@ fun saveFileToPath(applicationState: ApplicationState, file: File) {
         applicationState.updateDialog("SUCCESS", "Saved!")
     }
     applicationState.openDialog(true)
+}
+
+fun refreshList(applicationState: ApplicationState) {
+    applicationState.outputFileList.clear()
+    val folder = File("./outputFile")
+    folder.listFiles()?.forEach {
+        applicationState.outputFileList.add(it)
+    }
 }
 
 

@@ -33,7 +33,7 @@ export default function UploadPage() {
                 let data = {
                     id: Date.now(),
                     name: file.name,
-                    size: file.size.toString(),
+                    size: (file.size/1024/1024).toString(),
                     status: 'added',
                     rawFile: file
                 }
@@ -94,7 +94,7 @@ export default function UploadPage() {
         },
         {
             field: 'size',
-            headerName: 'Size',
+            headerName: 'Size(MB)',
             width: 100
         },
         {

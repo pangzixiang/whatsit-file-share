@@ -48,7 +48,7 @@ fun app(applicationState: ApplicationState) {
                         Column(verticalArrangement = Arrangement.spacedBy(5.dp), modifier = Modifier.padding(PaddingValues(5.dp))) {
                             when(selectedItem) {
                                 0 -> home(applicationState)
-                                1 -> settings()
+                                1 -> settings(applicationState)
                                 else -> home(applicationState)
                             }
                         }
