@@ -11,6 +11,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.unit.dp
 import com.pangzixiang.whatsit.whatsitfileshare.ui.common.ApplicationState
 import com.pangzixiang.whatsit.whatsitfileshare.utils.CacheUtils
+import io.vertx.core.http.ServerWebSocket
 import java.util.*
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -35,7 +36,13 @@ fun download(applicationState: ApplicationState) {
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             Button(
                 onClick = {
-                    applicationState.toggleFileDialogOpen()
+                    val wsClientList = CacheUtils.get("wsClient")
+                    if (wsClientList != null && (wsClientList as ArrayList<ServerWebSocket>).isNotEmpty()) {
+                        applicationState.toggleFileDialogOpen()
+                    } else {
+                        applicationState.updateDialog("WARNING", "No Client Connected!")
+                        applicationState.openDialog(true)
+                    }
                 }
             ) {
                 Text("Select File")

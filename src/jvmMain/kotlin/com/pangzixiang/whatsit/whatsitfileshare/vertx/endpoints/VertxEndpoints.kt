@@ -9,6 +9,7 @@ import com.pangzixiang.whatsit.whatsitfileshare.vertx.constant.ContentType
 import com.pangzixiang.whatsit.whatsitfileshare.vertx.constant.HttpMethods
 import com.pangzixiang.whatsit.whatsitfileshare.vertx.dto.ControllerRequest
 import io.vertx.core.Vertx
+import io.vertx.core.http.ServerWebSocket
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.RoutingContext
 import org.slf4j.Logger
@@ -25,7 +26,7 @@ class VertxEndpoints(vertx: Vertx, applicationState: ApplicationState): BaseVert
 
     private val logger: Logger = LoggerFactory.getLogger(VertxEndpoints::class.java)
 
-    @Endpoint(path = "/health", method = HttpMethods.GET)
+    @Endpoint(path = "/api/health", method = HttpMethods.GET)
     private fun health(req: RoutingContext) {
         req.response()
             .putHeader(ContentType.TYPE.value, ContentType.TEXT.value)
@@ -46,7 +47,7 @@ class VertxEndpoints(vertx: Vertx, applicationState: ApplicationState): BaseVert
 //        }
 //    }
 
-    @Endpoint(path = "/upload", method = HttpMethods.POST)
+    @Endpoint(path = "/api/upload", method = HttpMethods.POST)
     private fun upload(request: RoutingContext) {
         request.request().isExpectMultipart = true
         val req = request.request()
@@ -74,7 +75,7 @@ class VertxEndpoints(vertx: Vertx, applicationState: ApplicationState): BaseVert
 
     }
 
-    @Endpoint(path = "/download/:fileName", method = HttpMethods.GET)
+    @Endpoint(path = "/api/download/:fileName", method = HttpMethods.GET)
     private fun download(request: RoutingContext) {
         val fileName = URLDecoder.decode(request.pathParam("fileName"), "utf-8")
         logger.info(fileName)
@@ -95,7 +96,7 @@ class VertxEndpoints(vertx: Vertx, applicationState: ApplicationState): BaseVert
         request.response().setStatusCode(404).end("NOT FOUND")
     }
 
-    @Endpoint(path = "/getDownloadList", method = HttpMethods.GET)
+    @Endpoint(path = "/api/getDownloadList", method = HttpMethods.GET)
     private fun getDownload(request: RoutingContext) {
         val response = JsonObject()
         val tempList = CacheUtils.get("downloadFileList")
@@ -114,5 +115,51 @@ class VertxEndpoints(vertx: Vertx, applicationState: ApplicationState): BaseVert
         }
         response.put("data", fileList)
         request.response().putHeader(ContentType.TYPE.value, ContentType.JSON.value).end(response.encode())
+    }
+
+    @Endpoint(path = "/api/ws/downloadList", method = HttpMethods.GET)
+    private fun websocket(request: RoutingContext) {
+        val future = request.request().toWebSocket()
+        future.onSuccess {
+            getVertx().executeBlocking<Void> { _ ->
+                logger.info("Client [${it.binaryHandlerID()}] connected websocket")
+                val currentList = CacheUtils.get("wsClient")
+                if (currentList == null) {
+                    val initList = ArrayList<ServerWebSocket>()
+                    initList.add(it)
+                    CacheUtils.put("wsClient", initList)
+                } else {
+                    (currentList as ArrayList<ServerWebSocket>).add(it)
+                    CacheUtils.put("wsClient", currentList)
+                }
+                logger.info("Added Connection [${it.binaryHandlerID()}], " +
+                        "Total Client connection: ${(CacheUtils.get("wsClient") as ArrayList<ServerWebSocket>).size}")
+            }
+
+            it.textMessageHandler {msg ->
+                logger.info("Received msg [${msg}] from client [${it.binaryHandlerID()}]")
+            }
+
+            it.closeHandler { _ ->
+                getVertx().executeBlocking<Void> { _ ->
+                    logger.info("Connection [${it.binaryHandlerID()}] closed!")
+                    applicationState.downloadFileList.clear()
+                    val current = CacheUtils.get("wsClient")
+                    if (current != null) {
+                        current as ArrayList<*>
+                        current.forEach { ws ->
+                            ws as ServerWebSocket
+                            ws.writeTextMessage("deleteAll")
+                            if (it.binaryHandlerID().equals(ws.binaryHandlerID())) {
+                                current.remove(ws)
+                                logger.info("Removed Connection [${it.binaryHandlerID()}], " +
+                                        "Total Client connection: ${current.size}")
+                            }
+                        }
+                        CacheUtils.put("wsClient", current)
+                    }
+                }
+            }
+        }
     }
 }

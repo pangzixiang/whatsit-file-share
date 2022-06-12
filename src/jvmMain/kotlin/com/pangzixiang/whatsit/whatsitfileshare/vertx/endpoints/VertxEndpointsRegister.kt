@@ -27,6 +27,14 @@ class VertxEndpointsRegister(applicationState: ApplicationState) : BaseVerticle(
 //        router.route("/static/*").handler(StaticHandler.create("static"))
         router.route("/*").handler(StaticHandler.create("web-ui"))
 
+        router.get().handler{rc ->
+            if (rc.normalizedPath().contains("/api/")) {
+                rc.next()
+            } else {
+                rc.reroute("/")
+            }
+        }
+
         val kClass: KClass<VertxEndpoints> = VertxEndpoints::class
         for (method: Method in kClass.java.declaredMethods) {
             if (method.isAnnotationPresent(Endpoint::class.java)) {

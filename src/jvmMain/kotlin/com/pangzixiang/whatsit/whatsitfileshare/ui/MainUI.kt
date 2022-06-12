@@ -20,6 +20,8 @@ import com.pangzixiang.whatsit.whatsitfileshare.ui.component.FileDialog
 import com.pangzixiang.whatsit.whatsitfileshare.ui.component.app
 import com.pangzixiang.whatsit.whatsitfileshare.ui.component.openQRCodeDialogButton
 import com.pangzixiang.whatsit.whatsitfileshare.utils.CacheUtils
+import io.vertx.core.http.ServerWebSocket
+import io.vertx.core.json.JsonObject
 import java.io.File
 
 @Composable
@@ -43,15 +45,30 @@ fun mainUI(applicationState: ApplicationState) {
             Surface(
                 color = MaterialTheme.colors.surface,
             ) {
+                val wsClientList = CacheUtils.get("wsClient")
                 if (applicationState.isFileDialogOpen) {
-                    FileDialog(title = "Select File", isLoad = true) {
-                        if (it != null) {
-                            val file = File(it.toUri())
-                            logger.info("Selected File [${file.path}]")
-                            applicationState.addDownloadFileList(file)
-                            CacheUtils.put("downloadFileList", applicationState.downloadFileList)
+                    if (wsClientList != null && (wsClientList as ArrayList<ServerWebSocket>).isNotEmpty()) {
+                        FileDialog(title = "Select File", isLoad = true) {
+                            if (it != null) {
+                                val file = File(it.toUri())
+                                logger.info("Selected File [${file.path}]")
+                                applicationState.addDownloadFileList(file)
+                                CacheUtils.put("downloadFileList", applicationState.downloadFileList)
+
+                                wsClientList.forEach { ws ->
+                                    val data = JsonObject()
+                                    data.put("fileName", file.name)
+                                    data.put("fileSize", file.length())
+                                    data.put("fileLastModified", file.lastModified())
+                                    ws.writeTextMessage(data.encode())
+                                    logger.info("Sent message [${data}] to [${ws.binaryHandlerID()}]")
+                                }
+                            }
+                            applicationState.toggleFileDialogOpen()
                         }
-                        applicationState.toggleFileDialogOpen()
+                    } else {
+                        applicationState.updateDialog("WARNING", "No Client Connected!")
+                        applicationState.openDialog(true)
                     }
                 }
                 Column {
